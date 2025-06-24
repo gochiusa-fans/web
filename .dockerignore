@@ -1,0 +1,8 @@
+# This file specifies which files and directories should be ignored by Docker when building images.
+
+*.iml
+*.log
+.gitignore
+node_modules
+eslint.config.mjs
+Dockerfile

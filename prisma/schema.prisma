@@ -1,0 +1,59 @@
+generator client {
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  provider      = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id     Int    @id @default(autoincrement())
+  name   String @unique
+  avatar String @unique
+  url    String @unique
+
+  endpoints     AprilEndpoint[]
+  PhotoEndpoint PhotoEndpoint[]
+}
+
+model April {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  year        Int     @unique
+  image       String  @unique
+  description String?
+
+  endpoints AprilEndpoint[]
+  tweets    AprilTweet[]
+}
+
+model AprilTweet {
+  id         Int    @id @default(autoincrement())
+  activityId Int
+  tweetId    BigInt @unique
+
+  activity April @relation(fields: [activityId], references: [id])
+}
+
+model AprilEndpoint {
+  id          Int     @id @default(autoincrement())
+  userId      Int
+  activityId  Int
+  description String?
+  url         String  @unique
+
+  user     User  @relation(fields: [userId], references: [id])
+  activity April @relation(fields: [activityId], references: [id])
+}
+
+model PhotoEndpoint {
+  id          Int     @id @default(autoincrement())
+  userId      Int
+  slug        String
+  description String?
+  url         String  @unique
+
+  user User @relation(fields: [userId], references: [id])
+}
