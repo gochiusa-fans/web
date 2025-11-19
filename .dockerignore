@@ -1,5 +1,8 @@
 # This file specifies which files and directories should be ignored by Docker when building images.
 
+.env
+.next
+*.md
 *.iml
 *.log
 .gitignore
