@@ -7,6 +7,12 @@ interface Props {
 
 export const metadata: Metadata = {
     title: "GochiusaHub",
+    description: "GochiusaHub - A hub for Gochiusa fans",
+    manifest: "/manifest.json",
+    icons: {
+        icon: "/favicon.ico",
+        apple: "/image/192.png",
+    }
 }
 
 const Layout = (props: Props) => {

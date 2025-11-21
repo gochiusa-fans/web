@@ -1,8 +1,15 @@
 # This file specifies which files and directories should be ignored by Docker when building images.
 
+.env
+.next
+*.md
 *.iml
 *.log
 .gitignore
 node_modules
 eslint.config.mjs
 Dockerfile
+
+# Serwist
+public/sw*
+public/swe-worker*

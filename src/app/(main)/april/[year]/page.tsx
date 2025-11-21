@@ -23,16 +23,7 @@ interface Props {
     }>
 }
 
-export const revalidate = 600;
-
-export const generateStaticParams = async () => {
-    const activities = await database.april.findMany()
-    return activities.map((activity) => {
-        return {
-            year: activity.year.toString(),
-        }
-    })
-}
+export const dynamic = "force-dynamic";
 
 export const generateMetadata = async (props: Props) => {
     const activity = await database.april.findUnique({
@@ -131,15 +122,23 @@ const Page = async (props: Props) => {
                     </Grid>
                     <Typography variant="h4">相关Tweet</Typography>
                 </Stack>
-                <Masonry columns={{xs: 1, sm: 2, md: 3}} spacing={2} sx={{width: "fit-content", mt: 2}}>
-                    {
-                        activity.tweets.map((i, index) => (
-                            <Box key={index}>
-                                <TweetCard id={i.tweetId.toString()}/>
-                            </Box>
-                        ))
-                    }
-                </Masonry>
+                {
+                    activity.tweets.length === 0 ? (
+                        <Typography variant="body1">
+                            暂无相关Tweet。
+                        </Typography>
+                    ) : (
+                        <Masonry columns={{xs: 1, sm: 2, md: 3}} spacing={2} sx={{width: "fit-content", mt: 2}}>
+                            {
+                                activity.tweets.map((i, index) => (
+                                    <Box key={index}>
+                                        <TweetCard id={i.tweetId.toString()}/>
+                                    </Box>
+                                ))
+                            }
+                        </Masonry>
+                    )
+                }
             </Container>
         </main>
     )
