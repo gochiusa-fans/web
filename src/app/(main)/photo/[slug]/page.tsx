@@ -20,7 +20,7 @@ interface Props {
     }>
 }
 
-export const revalidate = 600;
+export const dynamic = "force-dynamic";
 
 export const generateStaticParams = async () => {
     return characterList.map((character) => {

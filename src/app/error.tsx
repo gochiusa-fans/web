@@ -12,8 +12,8 @@ const Page = () => {
                 <Image
                     src="https://s1.250king.top/image/2025/01/ffjfpplt.jpg"
                     alt=""
-                    width={194}
-                    height={218}
+                    width={198}
+                    height={165}
                     style={{
                         maskImage: "radial-gradient(ellipse at center, black 60%, transparent 100%)"
                     }}

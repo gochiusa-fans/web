@@ -9,3 +9,7 @@
 node_modules
 eslint.config.mjs
 Dockerfile
+
+# Serwist
+public/sw*
+public/swe-worker*

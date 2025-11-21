@@ -13,7 +13,7 @@ import Image from "@/component/image";
 import Link from "@/component/link";
 import {Metadata} from "next";
 
-export const revalidate = 600;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
     title: "官方愚人节活动归档 / GochiusaHub",

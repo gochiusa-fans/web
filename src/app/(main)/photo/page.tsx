@@ -16,8 +16,6 @@ export const metadata: Metadata = {
     title: "点兔展活动页面归档 / GochiusaHub",
 }
 
-export const revalidate = 600;
-
 const Page = async () => {
     return (
         <main>
