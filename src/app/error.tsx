@@ -10,7 +10,7 @@ const Page = () => {
         <Box sx={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <Stack spacing={1} alignItems="center">
                 <Image
-                    src="https://s1.250king.top/image/2025/01/ffjfpplt.jpg"
+                    src="https://static.250king.top/image/2025/01/ffjfpplt.jpg"
                     alt=""
                     width={198}
                     height={165}

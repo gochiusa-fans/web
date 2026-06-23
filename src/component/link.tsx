@@ -1,94 +1,57 @@
 "use client";
-import * as React from 'react';
-import clsx from 'clsx';
-import {usePathname} from 'next/navigation';
-import NextLink, { LinkProps as NextLinkProps } from 'next/link';
-import MuiLink, { LinkProps as MuiLinkProps } from '@mui/material/Link';
+import React from "react";
+import Link, { LinkProps } from "next/link";
+import { useRouter } from "next/navigation";
+import { Button, ButtonProps, Dropdown, DropdownItemProps } from "@heroui/react";
 
-interface NextLinkComposedProps
-  extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'>,
-    Omit<NextLinkProps, 'href' | 'as' | 'passHref' | 'onMouseEnter' | 'onClick' | 'onTouchStart'> {
-  to: NextLinkProps['href'];
-  linkAs?: NextLinkProps['as'];
-}
+type LinkButtonProps = (ButtonProps & { back: true; href?: never }) | (ButtonProps & { back?: false } & LinkProps);
 
-export const NextLinkComposed = React.forwardRef<HTMLAnchorElement, NextLinkComposedProps>(
-  function NextLinkComposed(props, ref) {
-    const { to, linkAs, replace, scroll, shallow, prefetch, locale, ...other } = props;
+type LinkDropdownItemProps = (DropdownItemProps & { back: true; href?: never }) | (DropdownItemProps & { back?: false } & LinkProps);
 
+export const LinkButton = ({ children, href, back, ...props }: LinkButtonProps) => {
+  const router = useRouter();
+  if (back) {
     return (
-      <NextLink
-        href={to}
-        prefetch={prefetch}
-        as={linkAs}
-        replace={replace}
-        scroll={scroll}
-        shallow={shallow}
-        passHref
-        locale={locale}
-        ref={ref}
-        {...other}
-      />
+        <Button {...props} onPress={() => router.back()}>
+          {children}
+        </Button>
     );
-  },
-);
-
-export type LinkProps = {
-  activeClassName?: string;
-  as?: NextLinkProps['as'];
-  href: NextLinkProps['href'];
-  linkAs?: NextLinkProps['as']; // Useful when the as prop is shallow by styled().
-  noLinkStyle?: boolean;
-} & Omit<NextLinkComposedProps, 'to' | 'linkAs' | 'href'> &
-  Omit<MuiLinkProps, 'href'>;
-
-// A styled version of the Next.js Link component:
-// https://nextjs.org/docs/pages/api-reference/components/link
-const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(function Link(props, ref) {
-  const {
-    activeClassName = 'active',
-    as,
-    className: classNameProps,
-    href,
-    linkAs: linkAsProp,
-    locale,
-    noLinkStyle,
-    prefetch,
-    replace,
-    scroll,
-    shallow,
-    ...other
-  } = props;
-
-  const pathname = typeof href === 'string' ? href : href.pathname;
-  const className = clsx(classNameProps, {
-    [activeClassName]: usePathname() === pathname && activeClassName,
-  });
-
-  const linkAs = linkAsProp || as;
-  const nextjsProps = {
-    to: href,
-    linkAs,
-    replace,
-    scroll,
-    shallow,
-    prefetch,
-    locale,
-  };
-
-  if (noLinkStyle) {
-    return <NextLinkComposed className={className} ref={ref} {...nextjsProps} {...other} />;
   }
-
   return (
-    <MuiLink
-      component={NextLinkComposed}
-      className={className}
-      ref={ref}
-      {...nextjsProps}
-      {...other}
-    />
+      <Button
+          {...props}
+          render={(prop) => (
+              <Link
+                  {...(prop as unknown as Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps>)}
+                  href={href}
+              />
+          )}
+      >
+        {children}
+      </Button>
   );
-});
+};
 
-export default Link;
+export const LinkDropdownItem = ({ children, href, back, ...props }: LinkDropdownItemProps) => {
+  const router = useRouter();
+  if (back) {
+    return (
+        <Dropdown.Item {...props} onPress={() => router.back()}>
+          {children}
+        </Dropdown.Item>
+    )
+  }
+  return (
+      <Dropdown.Item
+          {...props}
+          render={(prop) => (
+              <Link
+                  {...(prop as unknown as Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps>)}
+                  href={href}
+              />
+          )}
+      >
+        {children}
+      </Dropdown.Item>
+  );
+};

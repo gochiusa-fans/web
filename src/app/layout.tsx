@@ -1,9 +1,9 @@
 import React from "react";
-import {Metadata} from "next";
-
-interface Props {
-    children: React.ReactNode;
-}
+import { Toast } from "@heroui/react";
+import { ThemeProvider } from "@wrksz/themes";
+import { Metadata } from "next";
+import NextTopLoader from "nextjs-toploader";
+import "./global.css";
 
 export const metadata: Metadata = {
     title: "GochiusaHub",
@@ -15,11 +15,15 @@ export const metadata: Metadata = {
     }
 }
 
-const Layout = (props: Props) => {
+const Layout = ({children}: React.PropsWithChildren) => {
     return (
-        <html lang="zh-Hans">
-            <body style={{height: '100vh'}}>
-                {props.children}
+        <html lang="zh-cn" suppressHydrationWarning>
+            <body className="bg-background text-foreground">
+                <ThemeProvider>
+                    <Toast.Provider />
+                    <NextTopLoader showSpinner={false} />
+                    {children}
+                </ThemeProvider>
             </body>
         </html>
     );

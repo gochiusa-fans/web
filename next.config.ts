@@ -9,10 +9,11 @@ const withSerwist = withSerwistInit({
 const nextConfig: NextConfig = withSerwist({
     output: "standalone",
     images: {
+        dangerouslyAllowLocalIP: true,
         remotePatterns: [
             {
                 protocol: "https",
-                hostname: "s1.250king.top"
+                hostname: "static.250king.top"
             },
             {
                 protocol: "https",

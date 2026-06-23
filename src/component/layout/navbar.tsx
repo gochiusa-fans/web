@@ -1,78 +1,75 @@
 "use client";
-import React from "react";
-import AppBar from "@mui/material/AppBar";
-import Drawer from "@mui/material/Drawer";
-import EggIcon from "@/component/icon/egg";
-import HomeIcon from "@/component/icon/home";
-import IconButton from "@mui/material/IconButton";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
-import MenuIcon from "@mui/icons-material/Menu";
-import PhotoIcon from "@/component/icon/photo";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
-import {createTheme, ThemeProvider} from "@mui/material/styles";
-import {NextLinkComposed} from "@/component/link";
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Button, Drawer } from "@heroui/react";
 
-const Navbar = () => {
-    const [open, setOpen] = React.useState(false);
-    const theme = createTheme({
-        palette: {
-            primary: {
-                main: "#955e4b"
-            }
-        }
-    })
-    const pages = [
-        {name: "首页", url: "/", icon: <HomeIcon/>},
-        {name: "愚人节活动", url: "/april", icon: <EggIcon/>},
-        {name: "一起拍照", url: "/photo", icon: <PhotoIcon/>},
-    ]
+export const Navbar = () => {
+    const pathname = usePathname();
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+    const navItems = [
+        { name: "愚人节活动", href: "/april" },
+        { name: "一起拍照", href: "/photo" },
+    ];
+
+    const getNavClassName = (href: string) => {
+        const isActive = pathname === href || pathname?.startsWith(`${href}/`);
+        return isActive ? "text-focus font-semibold" : "";
+    };
 
     return (
-        <>
-            <Drawer open={open} onClose={() => setOpen(false)}>
-                <List sx={{width: 250}}>
-                    {
-                        pages.map((page, index) => (
-                            <ListItem key={index} disablePadding>
-                                <ListItemButton
-                                    component={NextLinkComposed}
-                                    to={page.url}
-                                    onClick={() => {setOpen(false)}}
-                                >
-                                    <ListItemIcon>
-                                        {page.icon}
-                                    </ListItemIcon>
-                                    <ListItemText primary={page.name}/>
-                                </ListItemButton>
-                            </ListItem>
-                        ))
-                    }
-                </List>
+        <nav className="border-separator bg-background/70 sticky top-0 z-40 w-full border-b backdrop-blur-lg">
+            <header className="container mx-auto flex h-16 items-center gap-8 px-6">
+                <div className="flex shrink-0 items-center gap-4">
+                    <Button
+                        isIconOnly
+                        className="md:hidden"
+                        variant="secondary"
+                        onPress={() => setIsDrawerOpen(true)}
+                    >
+                        <span className="icon-[ri--list-unordered]" />
+                    </Button>
+                    <div className="flex items-center gap-3">
+                        <p className="font-bold">Gochiusa Hub</p>
+                    </div>
+                </div>
+                <ul className="hidden items-center gap-6 md:flex">
+                    {navItems.map((item) => (
+                        <li key={item.href}>
+                            <Link href={item.href} className={getNavClassName(item.href)}>
+                                {item.name}
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
+            </header>
+            <Drawer>
+                <Drawer.Backdrop isOpen={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+                    <Drawer.Content placement="left" className="md:hidden">
+                        <Drawer.Dialog aria-label="导航菜单">
+                            <Drawer.CloseTrigger />
+                            <Drawer.Header>
+                                <Drawer.Heading>导航菜单</Drawer.Heading>
+                            </Drawer.Header>
+                            <Drawer.Body>
+                                <nav className="flex flex-col gap-1">
+                                    {navItems.map((item) => (
+                                        <Link
+                                            key={item.href}
+                                            href={item.href}
+                                            className={`rounded-xl px-3 py-2.5 text-sm transition-colors hover:bg-default ${getNavClassName(item.href)}`}
+                                            onClick={() => setIsDrawerOpen(false)}
+                                        >
+                                            {item.name}
+                                        </Link>
+                                    ))}
+                                </nav>
+                            </Drawer.Body>
+                        </Drawer.Dialog>
+                    </Drawer.Content>
+                </Drawer.Backdrop>
             </Drawer>
-            <ThemeProvider theme={theme}>
-                <AppBar position="fixed">
-                    <Toolbar>
-                        <IconButton
-                            size="large"
-                            edge="start"
-                            color="inherit"
-                            sx={{mr: 2}}
-                            onClick={() => setOpen(!open)}
-                        >
-                            <MenuIcon/>
-                        </IconButton>
-                        <Typography variant="h6">GochiusaHub</Typography>
-                    </Toolbar>
-                </AppBar>
-                <Toolbar/>
-            </ThemeProvider>
-        </>
+        </nav>
     );
-}
-
-export default Navbar;
+};
