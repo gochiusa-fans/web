@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React from "react";
 
 /**
  * 所有花瓣形状的绘制函数（从你的 CreateJS 代码转换而来）
@@ -192,9 +192,9 @@ const shapeIds = Object.keys(shapeDrawers);
 
 // ---------- 2. React 组件 ----------
 export const SakuraCanvas = () => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const canvasRef = React.useRef<HTMLCanvasElement>(null);
 
-    useEffect(() => {
+    React.useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
@@ -204,8 +204,9 @@ export const SakuraCanvas = () => {
         let animationFrameId = 0;
         let frameCount = 0;
         let mounted = true;
+        let isDarkMode = false;
 
-        type Particle = {
+        type SakuraParticle = {
             x: number;
             y: number;
             vx: number;
@@ -225,10 +226,33 @@ export const SakuraCanvas = () => {
             drawer: (ctx: CanvasRenderingContext2D) => void;
         };
 
-        const particles: Particle[] = [];
-        const pool: Particle[] = [];
+        type FireworkRocket = {
+            x: number;
+            y: number;
+            vx: number;
+            vy: number;
+            targetY: number;
+            color: string;
+        };
 
-        const config = {
+        type FireworkSpark = {
+            x: number;
+            y: number;
+            vx: number;
+            vy: number;
+            life: number;
+            maxLife: number;
+            size: number;
+            color: string;
+        };
+
+        const sakuraParticles: SakuraParticle[] = [];
+        const sakuraPool: SakuraParticle[] = [];
+
+        const rockets: FireworkRocket[] = [];
+        const sparks: FireworkSpark[] = [];
+
+        const sakuraConfig = {
             emitFrequency: 10,
 
             get startX() {
@@ -272,7 +296,7 @@ export const SakuraCanvas = () => {
             finishAlphaVariance: 0,
         };
 
-        const colors = [
+        const sakuraColors = [
             {h: 330, s: 80, l: 92},
             {h: 47, s: 95, l: 83},
             {h: 104, s: 65, l: 78},
@@ -281,6 +305,20 @@ export const SakuraCanvas = () => {
             {h: 196, s: 100, l: 82},
             {h: 253, s: 65, l: 80},
         ];
+
+        const fireworkColors = [
+            "hsl(330 100% 72%)",
+            "hsl(45 100% 68%)",
+            "hsl(190 100% 70%)",
+            "hsl(260 100% 78%)",
+            "hsl(120 80% 72%)",
+            "hsl(15 100% 70%)",
+            "hsl(0 0% 100%)",
+        ];
+
+        const random = (min: number, max: number) => {
+            return Math.random() * (max - min) + min;
+        };
 
         const calcRandomValueWithVariance = (
             value: number,
@@ -307,6 +345,30 @@ export const SakuraCanvas = () => {
             return start * life + end * (1 - life);
         };
 
+        const getIsDarkMode = () => {
+            const html = document.documentElement;
+            const colorScheme = getComputedStyle(html).colorScheme;
+
+            return html.classList.contains("dark") || colorScheme === "dark";
+        };
+
+        const clearParticles = () => {
+            sakuraParticles.length = 0;
+            sakuraPool.length = 0;
+            rockets.length = 0;
+            sparks.length = 0;
+            frameCount = 0;
+        };
+
+        const updateMode = () => {
+            const nextIsDarkMode = getIsDarkMode();
+
+            if (nextIsDarkMode !== isDarkMode) {
+                isDarkMode = nextIsDarkMode;
+                clearParticles();
+            }
+        };
+
         const resize = () => {
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
@@ -319,31 +381,31 @@ export const SakuraCanvas = () => {
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         };
 
-        const createParticle = (): Particle => {
-            const particle = pool.pop() ?? {} as Particle;
+        const createSakuraParticle = (): SakuraParticle => {
+            const particle = (sakuraPool.pop() ?? {}) as SakuraParticle;
 
             particle.x = calcRandomValueWithVariance(
-                config.startX,
-                config.startXVariance,
+                sakuraConfig.startX,
+                sakuraConfig.startXVariance,
             );
 
             particle.y = calcRandomValueWithVariance(
-                config.startY,
-                config.startYVariance,
+                sakuraConfig.startY,
+                sakuraConfig.startYVariance,
             );
 
             const speed = Math.max(
                 0,
                 calcRandomValueWithVariance(
-                    config.initialSpeed,
-                    config.initialSpeedVariance,
+                    sakuraConfig.initialSpeed,
+                    sakuraConfig.initialSpeedVariance,
                 ),
             );
 
             const angle = (
                 calcRandomValueWithVariance(
-                    config.initialDirection,
-                    config.initialDirectionVariance,
+                    sakuraConfig.initialDirection,
+                    sakuraConfig.initialDirectionVariance,
                 ) * Math.PI
             ) / 180;
 
@@ -353,8 +415,8 @@ export const SakuraCanvas = () => {
             particle.totalLife = Math.max(
                 1,
                 calcRandomValueWithVariance(
-                    config.lifeSpan,
-                    config.lifeSpanVariance,
+                    sakuraConfig.lifeSpan,
+                    sakuraConfig.lifeSpanVariance,
                     true,
                 ),
             );
@@ -365,8 +427,8 @@ export const SakuraCanvas = () => {
                 0,
                 1,
                 calcRandomValueWithVariance(
-                    config.startAlpha,
-                    config.startAlphaVariance,
+                    sakuraConfig.startAlpha,
+                    sakuraConfig.startAlphaVariance,
                 ),
             );
 
@@ -374,30 +436,30 @@ export const SakuraCanvas = () => {
                 0,
                 1,
                 calcRandomValueWithVariance(
-                    config.finishAlpha,
-                    config.finishAlphaVariance,
+                    sakuraConfig.finishAlpha,
+                    sakuraConfig.finishAlphaVariance,
                 ),
             );
 
             particle.startScale = Math.max(
                 0,
                 calcRandomValueWithVariance(
-                    config.startScale,
-                    config.startScaleVariance,
+                    sakuraConfig.startScale,
+                    sakuraConfig.startScaleVariance,
                 ),
             );
 
             particle.finishScale = Math.max(
                 0,
                 calcRandomValueWithVariance(
-                    config.finishScale,
-                    config.finishScaleVariance,
+                    sakuraConfig.finishScale,
+                    sakuraConfig.finishScaleVariance,
                 ),
             );
 
             particle.rotation = Math.random() * 360;
 
-            const color = colors[Math.floor(Math.random() * colors.length)];
+            const color = sakuraColors[Math.floor(Math.random() * sakuraColors.length)];
             particle.color = `hsl(${color.h}, ${color.s}%, ${color.l}%)`;
 
             const shapeId = shapeIds[Math.floor(Math.random() * shapeIds.length)];
@@ -406,21 +468,21 @@ export const SakuraCanvas = () => {
             return particle;
         };
 
-        const emitParticle = () => {
-            particles.push(createParticle());
+        const emitSakuraParticle = () => {
+            sakuraParticles.push(createSakuraParticle());
         };
 
-        const emit = () => {
+        const emitSakura = () => {
             const framerate = 60;
             const frameInSec = frameCount % framerate;
-            const emitPerSec = config.emitFrequency;
+            const emitPerSec = sakuraConfig.emitFrequency;
 
             const loopInt = emitPerSec === 0
                 ? 0
                 : Math.floor(emitPerSec / framerate);
 
             for (let i = 0; i < loopInt; i++) {
-                emitParticle();
+                emitSakuraParticle();
             }
 
             const loopFloat = emitPerSec / framerate - loopInt;
@@ -430,7 +492,7 @@ export const SakuraCanvas = () => {
                 loopFloat > 0 &&
                 frameInSec % Math.floor(1 / loopFloat) === 0
             ) {
-                emitParticle();
+                emitSakuraParticle();
             }
 
             frameCount++;
@@ -440,7 +502,7 @@ export const SakuraCanvas = () => {
             }
         };
 
-        const drawParticle = (particle: Particle) => {
+        const drawSakuraParticle = (particle: SakuraParticle) => {
             const lifePercent = particle.currentLife / particle.totalLife;
 
             const alpha = calcCurrentValue(
@@ -464,69 +526,193 @@ export const SakuraCanvas = () => {
             ctx.globalAlpha = alpha;
             ctx.fillStyle = particle.color;
 
-            /*
-             * 原 CreateJS 的 sakura 坐标大多在 0~50 左右，
-             * 这里平移一下，让旋转中心更接近花瓣中心。
-             */
             ctx.translate(-25, -25);
-
             particle.drawer(ctx);
 
             ctx.restore();
         };
 
-        const animate = () => {
+        const updateSakura = () => {
             const accelerationAngle = (
-                config.accelerationDirection * Math.PI
+                sakuraConfig.accelerationDirection * Math.PI
             ) / 180;
 
-            const accX = Math.cos(accelerationAngle) * config.accelerationSpeed;
-            const accY = Math.sin(accelerationAngle) * config.accelerationSpeed;
+            const accX = Math.cos(accelerationAngle) * sakuraConfig.accelerationSpeed;
+            const accY = Math.sin(accelerationAngle) * sakuraConfig.accelerationSpeed;
 
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const particle = particles[i];
+            emitSakura();
+
+            for (let i = sakuraParticles.length - 1; i >= 0; i--) {
+                const particle = sakuraParticles[i];
 
                 particle.vx += accX;
                 particle.vy += accY;
 
-                particle.vx *= 1 - config.friction;
-                particle.vy *= 1 - config.friction;
+                particle.vx *= 1 - sakuraConfig.friction;
+                particle.vy *= 1 - sakuraConfig.friction;
 
                 particle.x += particle.vx;
                 particle.y += particle.vy;
 
-                /*
-                 * 原版里每帧 particleShape.rotation++。
-                 */
                 particle.rotation += 1;
 
-                drawParticle(particle);
+                drawSakuraParticle(particle);
 
                 particle.currentLife--;
 
                 if (particle.currentLife < 0) {
-                    particles.splice(i, 1);
-                    pool.push(particle);
+                    sakuraParticles.splice(i, 1);
+                    sakuraPool.push(particle);
                 }
             }
+        };
+
+        const createRocket = () => {
+            const color = fireworkColors[Math.floor(Math.random() * fireworkColors.length)];
+
+            rockets.push({
+                x: random(window.innerWidth * 0.15, window.innerWidth * 0.85),
+                y: window.innerHeight + 20,
+                vx: random(-0.8, 0.8),
+                vy: random(-9.5, -6.5),
+                targetY: random(window.innerHeight * 0.16, window.innerHeight * 0.48),
+                color,
+            });
+        };
+
+        const explode = (rocket: FireworkRocket) => {
+            const count = Math.floor(random(72, 128));
+
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 * i) / count + random(-0.08, 0.08);
+                const speed = random(2.2, 7.2);
+
+                sparks.push({
+                    x: rocket.x,
+                    y: rocket.y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: random(110, 170),
+                    maxLife: 170,
+                    size: random(1.8, 3.6),
+                    color: rocket.color,
+                });
+            }
+
+            // 中间再补一点白色闪光
+            for (let i = 0; i < 28; i++) {
+                const angle = random(0, Math.PI * 2);
+                const speed = random(1.2, 3.4);
+
+                sparks.push({
+                    x: rocket.x,
+                    y: rocket.y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: random(45, 80),
+                    maxLife: 80,
+                    size: random(1.8, 3.4),
+                    color: "hsl(0 0% 100%)",
+                });
+            }
+        };
+
+        const updateFireworks = () => {
+            // 频率别太高，不然背景会抢内容注意力
+            if (Math.random() < 0.028 && rockets.length < 4) {
+                createRocket();
+            }
+
+            ctx.save();
+            ctx.globalCompositeOperation = "lighter";
+
+            for (let i = rockets.length - 1; i >= 0; i--) {
+                const rocket = rockets[i];
+
+                rocket.x += rocket.vx;
+                rocket.y += rocket.vy;
+                rocket.vy += 0.035;
+
+                ctx.save();
+                ctx.globalAlpha = 0.9;
+                ctx.fillStyle = rocket.color;
+                ctx.beginPath();
+                ctx.arc(rocket.x, rocket.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.globalAlpha = 0.35;
+                ctx.beginPath();
+                ctx.arc(rocket.x, rocket.y + 8, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                if (rocket.y <= rocket.targetY || rocket.vy >= 0) {
+                    explode(rocket);
+                    rockets.splice(i, 1);
+                }
+            }
+
+            for (let i = sparks.length - 1; i >= 0; i--) {
+                const spark = sparks[i];
+
+                const alpha = Math.max(0, spark.life / spark.maxLife);
+
+                spark.x += spark.vx;
+                spark.y += spark.vy;
+
+                spark.vx *= 0.988;
+                spark.vy *= 0.988;
+                spark.vy += 0.018;
+
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = spark.color;
+
+                ctx.beginPath();
+                ctx.arc(spark.x, spark.y, spark.size * alpha, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+
+                spark.life--;
+
+                if (spark.life <= 0) {
+                    sparks.splice(i, 1);
+                }
+            }
+
+            ctx.restore();
         };
 
         const tick = () => {
             if (!mounted) return;
 
+            updateMode();
+
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
-            emit();
-            animate();
+            if (isDarkMode) {
+                updateFireworks();
+            } else {
+                updateSakura();
+            }
 
             animationFrameId = requestAnimationFrame(tick);
         };
 
         resize();
+        updateMode();
 
         const reduceMotion = window.matchMedia(
             "(prefers-reduced-motion: reduce)",
         ).matches;
+
+        const observer = new MutationObserver(updateMode);
+
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["class", "style", "data-theme"],
+        });
 
         window.addEventListener("resize", resize);
 
@@ -536,11 +722,12 @@ export const SakuraCanvas = () => {
 
         return () => {
             mounted = false;
+
+            observer.disconnect();
             window.removeEventListener("resize", resize);
             cancelAnimationFrame(animationFrameId);
 
-            particles.length = 0;
-            pool.length = 0;
+            clearParticles();
         };
     }, []);
 
@@ -548,14 +735,7 @@ export const SakuraCanvas = () => {
         <canvas
             ref={canvasRef}
             aria-hidden
-            style={{
-                position: "fixed",
-                inset: 0,
-                width: "100vw",
-                height: "100vh",
-                pointerEvents: "none",
-                zIndex: 0,
-            }}
+            className="fixed inset-0 h-screen w-screen pointer-events-none z-0"
         />
     );
 };

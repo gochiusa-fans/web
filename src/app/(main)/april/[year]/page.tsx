@@ -1,21 +1,16 @@
 import React from "react";
 import EndpointCard from "@/component/card/endpoint";
-import Breadcrumbs from "@mui/material/Breadcrumbs";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import TweetCard from "@/component/card/tweet";
-import TimeIcon from "@/component/icon/time";
-import HomeIcon from "@/component/icon/home";
-import EggIcon from "@/component/icon/egg";
-import Stack from "@mui/material/Stack";
 import Alert from "@mui/material/Alert";
 import database from "@/util/database";
 import Masonry from "@mui/lab/Masonry";
 import Grid from "@mui/material/Grid";
 import Image from "@/component/image";
 import Box from "@mui/material/Box";
-import Link from "@/component/link";
 import {notFound} from "next/navigation";
+import {Metadata} from "next";
 
 interface Props {
     params: Promise<{
@@ -25,7 +20,7 @@ interface Props {
 
 export const dynamic = "force-dynamic";
 
-export const generateMetadata = async (props: Props) => {
+export const generateMetadata = async (props: Props): Promise<Metadata> => {
     const activity = await database.april.findUnique({
         where: {
             year: Number((await props.params).year)
@@ -39,7 +34,7 @@ export const generateMetadata = async (props: Props) => {
         }
     });
     if (!activity) {
-        return
+        return {}
     }
     return {
         title: `${activity.name} / GochiusaHub`,
@@ -74,21 +69,6 @@ const Page = async (props: Props) => {
         <main>
             <Image src={activity.image} alt=""/>
             <Container component={"article"} fixed>
-                <Stack spacing={2} sx={{my: 2}}>
-                    <Breadcrumbs>
-                        <Link sx={{display: 'flex', alignItems: 'center'}} href="/" underline="hover" color="inherit">
-                            <HomeIcon sx={{mr: 0.5}} fontSize="inherit"/>
-                            首页
-                        </Link>
-                        <Link sx={{display: 'flex', alignItems: 'center'}} href="/april" underline="hover" color="inherit">
-                            <EggIcon sx={{mr: 0.5}} fontSize="inherit"/>
-                            愚人节活动
-                        </Link>
-                        <Link sx={{display: 'flex', alignItems: 'center'}} href={`/april/${activity.year}`} underline="hover" color="inherit">
-                            <TimeIcon sx={{mr: 0.5}} fontSize="inherit"/>
-                            {activity.year}
-                        </Link>
-                    </Breadcrumbs>
                     <Typography variant="h3">{activity.name}</Typography>
                     {
                         activity.year > 2017? null: (
